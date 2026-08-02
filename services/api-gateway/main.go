@@ -23,7 +23,7 @@ func main() {
 
 	mux.HandleFunc("POST /trip/preview", handleTripReview)
 
-	server := &http.Server{
+	sv := &http.Server{
 		Addr:    httpAddr,
 		Handler: mux,
 	}
@@ -31,7 +31,7 @@ func main() {
 	svStartCh := make(chan error, 1)
 	go func() {
 		log.Printf("API Gateway listening on port %s", httpAddr)
-		svStartCh <- server.ListenAndServe()
+		svStartCh <- sv.ListenAndServe()
 	}()
 
 	// Graceful shutdown. Wait for OS, K8s signal or error and shutdown after max 10s
@@ -44,12 +44,12 @@ func main() {
 	case sig := <-shutdown:
 		log.Printf("Server shutting down with signal: %s", sig)
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
 		defer cancel()
 
-		if err := server.Shutdown(ctx); err != nil {
+		if err := sv.Shutdown(ctx); err != nil {
 			log.Printf("Could not shutdown gracefully: %s", err)
-			server.Close()
+			sv.Close()
 		}
 	}
 }

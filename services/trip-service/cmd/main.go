@@ -1,12 +1,17 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	http_h "ride-sharing/services/trip-service/internal/infrastructure/http"
 	"ride-sharing/services/trip-service/internal/infrastructure/repository"
 	"ride-sharing/services/trip-service/internal/service"
 	"ride-sharing/shared/env"
+	"syscall"
+	"time"
 )
 
 var (
@@ -14,7 +19,7 @@ var (
 )
 
 func main() {
-	log.Println("Starting Trip Service")
+	log.Println("Starting TRIP Service")
 
 	inmemRepo := repository.NewInmemRepository()
 	svc := service.NewTripService(inmemRepo)
@@ -27,12 +32,33 @@ func main() {
 		w.Write([]byte(res))
 	})
 
-	server := &http.Server{
+	sv := &http.Server{
 		Addr:    httpAddr,
 		Handler: mux,
 	}
 
-	if err := server.ListenAndServe(); err != nil {
-		log.Printf("HTTP trip-service error: %v", err)
+	svStartCh := make(chan error, 1)
+	go func() {
+		log.Printf("TRIP Service listening on port %s", httpAddr)
+		svStartCh <- sv.ListenAndServe()
+	}()
+
+	// Graceful shutdown. Wait for OS, K8s signal or error and shutdown after max 10s
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+	select {
+	case err := <-svStartCh:
+		log.Printf("Error starting the server: %s", err)
+
+	case sig := <-shutdown:
+		log.Printf("Server shutting down with signal: %s", sig)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+		defer cancel()
+
+		if err := sv.Shutdown(ctx); err != nil {
+			log.Printf("Could not shutdown gracefully: %s", err)
+			sv.Close()
+		}
 	}
 }
