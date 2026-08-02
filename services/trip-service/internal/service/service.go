@@ -30,7 +30,7 @@ func (s *TripService) CreateTrip(ctx context.Context, fare *domain.RideFareModel
 	return trip, nil
 }
 
-func (s *TripService) GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*types.OsrmAPIResponse, error) {
+func (s *TripService) GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*domain.OsrmAPIResponse, error) {
 	url := fmt.Sprintf("%s/route/v1/driving/%f,%f;%f,%f?overview=full&geometries=geojson", BASE_OSRM_URL,
 		pickup.Longitude, pickup.Latitude,
 		destination.Longitude, destination.Latitude)
@@ -46,12 +46,10 @@ func (s *TripService) GetRoute(ctx context.Context, pickup, destination *types.C
 		return nil, fmt.Errorf("error reading OSRM API response: %v", err)
 	}
 
-	var routeResponse *types.OsrmAPIResponse
+	var routeResponse *domain.OsrmAPIResponse
 	if err := json.Unmarshal(body, &routeResponse); err != nil {
 		return nil, fmt.Errorf("error unparsing OSRM API response: %v", err)
 	}
-
-	routeResponse.PutoElQueLee = true
 
 	return routeResponse, nil
 }

@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	pb "ride-sharing/shared/proto/trip"
 	"ride-sharing/shared/types"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,6 +13,38 @@ type TripModel struct {
 	UserID   string             `json:"userID"`
 	Status   string             `json:"status"`
 	RideFare *RideFareModel     `json:"ride_fare"`
+}
+
+type OsrmAPIResponse struct {
+	Routes []struct {
+		Distance float64 `json:"distance"`
+		Duration float64 `json:"duration"`
+		Geometry struct {
+			Coordinates [][]float64 `json:"coordinates"`
+		} `json:"geometry"`
+	} `json:"routes"`
+}
+
+func (o *OsrmAPIResponse) ToProto() *pb.Route {
+	route := o.Routes[0]
+	geometry := route.Geometry.Coordinates
+	coordinates := make([]*pb.Coordinate, len(geometry))
+	for i, coord := range geometry {
+		coordinates[i] = &pb.Coordinate{
+			Latitude:  coord[0],
+			Longitude: coord[1],
+		}
+	}
+
+	return &pb.Route{
+		Geometry: []*pb.Geometry{
+			{
+				Coordinates: coordinates,
+			},
+		},
+		Distance: route.Distance,
+		Duration: route.Duration,
+	}
 }
 
 func NewTripModel(status string, fare *RideFareModel) *TripModel {
@@ -29,5 +62,5 @@ type TripRepository interface {
 
 type TripService interface {
 	CreateTrip(ctx context.Context, fare *RideFareModel) (*TripModel, error)
-	GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*types.OsrmAPIResponse, error)
+	GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*OsrmAPIResponse, error)
 }
