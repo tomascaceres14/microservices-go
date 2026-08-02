@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"ride-sharing/shared/env"
 )
@@ -23,7 +28,28 @@ func main() {
 		Handler: mux,
 	}
 
-	if err := server.ListenAndServe(); err != nil {
-		log.Printf("HTTP gateway error: %v", err)
+	svStartCh := make(chan error, 1)
+	go func() {
+		log.Printf("API Gateway listening on port %s", httpAddr)
+		svStartCh <- server.ListenAndServe()
+	}()
+
+	// Graceful shutdown. Wait for OS, K8s signal or error and shutdown after max 10s
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+	select {
+	case err := <-svStartCh:
+		log.Printf("Error starting the server: %s", err)
+
+	case sig := <-shutdown:
+		log.Printf("Server shutting down with signal: %s", sig)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		if err := server.Shutdown(ctx); err != nil {
+			log.Printf("Could not shutdown gracefully: %s", err)
+			server.Close()
+		}
 	}
 }
