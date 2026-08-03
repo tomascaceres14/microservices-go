@@ -44,9 +44,15 @@ func (h *GRPCHandler) PreviewTrip(ctx context.Context, req *pb.PreviewTripReques
 		return nil, status.Errorf(codes.Internal, "Error fetching route: %s", err)
 	}
 
+	estimatedFares := h.svc.EstimatePackagesPriceWithRoute(result)
+	fares, err := h.svc.GenerateTripFares(ctx, estimatedFares, req.GetUserID())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Error saving fares: %s", err)
+	}
+
 	return &pb.PreviewTripResponse{
 		Route:     result.ToProto(),
-		RideFares: []*pb.RideFare{},
+		RideFares: domain.ToRideFaresProto(fares),
 	}, nil
 
 }
