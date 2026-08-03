@@ -51,4 +51,8 @@ func (h *GRPCHandler) PreviewTrip(ctx context.Context, req *pb.PreviewTripReques
 
 }
 
+func (h *GRPCHandler) CreateTrip(context.Context, *pb.CreateTripRequest) (*pb.CreateTripResponse, error) {
+	return &pb.CreateTripResponse{}, nil
+}
+
 func (h *GRPCHandler) mustEmbedUnimplementedTripServiceServer() {}

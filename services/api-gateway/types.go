@@ -5,13 +5,13 @@ import (
 	"ride-sharing/shared/types"
 )
 
-type previewTripReq struct {
+type previewTripRequest struct {
 	UserID      string           `json:"userID"`
 	Pickup      types.Coordinate `json:"pickup"`
 	Destination types.Coordinate `json:"destination"`
 }
 
-func (r *previewTripReq) ToProto() *pb.PreviewTripRequest {
+func (r *previewTripRequest) ToProto() *pb.PreviewTripRequest {
 	return &pb.PreviewTripRequest{
 		UserID: r.UserID,
 		StartLocation: &pb.Coordinate{
@@ -22,5 +22,17 @@ func (r *previewTripReq) ToProto() *pb.PreviewTripRequest {
 			Latitude:  r.Destination.Latitude,
 			Longitude: r.Destination.Longitude,
 		},
+	}
+}
+
+type startTripRequest struct {
+	RideFareID string `json:"rideFareID"`
+	UserID     string `json:"userID"`
+}
+
+func (c *startTripRequest) ToProto() *pb.CreateTripRequest {
+	return &pb.CreateTripRequest{
+		RideFareID: c.RideFareID,
+		UserID:     c.UserID,
 	}
 }
