@@ -38,27 +38,40 @@ func (h *GRPCHandler) PreviewTrip(ctx context.Context, req *pb.PreviewTripReques
 		Longitude: req.GetEndLocation().GetLongitude(),
 	}
 
-	result, err := h.svc.GetRoute(ctx, pickup, destination)
+	route, err := h.svc.GetRoute(ctx, pickup, destination)
 	if err != nil {
 		log.Printf("Error fetching route: %s", err)
 		return nil, status.Errorf(codes.Internal, "Error fetching route: %s", err)
 	}
 
-	estimatedFares := h.svc.EstimatePackagesPriceWithRoute(result)
+	estimatedFares := h.svc.EstimatePackagesPriceWithRoute(route)
 	fares, err := h.svc.GenerateTripFares(ctx, estimatedFares, req.GetUserID())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Error saving fares: %s", err)
 	}
 
 	return &pb.PreviewTripResponse{
-		Route:     result.ToProto(),
+		Route:     route.ToProto(),
 		RideFares: domain.ToRideFaresProto(fares),
 	}, nil
 
 }
 
-func (h *GRPCHandler) CreateTrip(context.Context, *pb.CreateTripRequest) (*pb.CreateTripResponse, error) {
-	return &pb.CreateTripResponse{}, nil
+func (h *GRPCHandler) CreateTrip(ctx context.Context, req *pb.CreateTripRequest) (*pb.CreateTripResponse, error) {
+	fare, err := h.svc.GetAndValidateFare(ctx, req.GetRideFareID(), req.GetUserID())
+	if err != nil {
+		return &pb.CreateTripResponse{}, status.Errorf(codes.Internal, "Error fetching fare: %s", err)
+	}
+
+	trip, err := h.svc.CreateTrip(ctx, fare)
+	if err != nil {
+		return &pb.CreateTripResponse{}, status.Errorf(codes.Internal, "Error fetching trip: %s", err)
+	}
+
+	return &pb.CreateTripResponse{
+		TripID: trip.ID.Hex(),
+	}, nil
+
 }
 
 func (h *GRPCHandler) mustEmbedUnimplementedTripServiceServer() {}

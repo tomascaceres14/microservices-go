@@ -18,7 +18,7 @@ const (
 )
 
 type TripService struct {
-	repo *repository.InmemRepository
+	repo domain.TripRepository
 }
 
 func NewTripService(repo *repository.InmemRepository) *TripService {
@@ -29,7 +29,11 @@ func NewTripService(repo *repository.InmemRepository) *TripService {
 
 func (s *TripService) CreateTrip(ctx context.Context, fare *domain.RideFareModel) (*domain.TripModel, error) {
 	trip := domain.NewTripModel("ok", fare)
-	return trip, nil
+	tripDB, err := s.repo.CreateTrip(ctx, trip)
+	if err != nil {
+		return nil, err
+	}
+	return tripDB, nil
 }
 
 func (s *TripService) GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*domain.OsrmAPIResponse, error) {
@@ -88,6 +92,24 @@ func (s *TripService) EstimatePackagesPriceWithRoute(route *domain.OsrmAPIRespon
 	}
 
 	return estimatedFares
+}
+
+func (s *TripService) GetAndValidateFare(ctx context.Context, fareID, userID string) (*domain.RideFareModel, error) {
+
+	rideFare, err := s.repo.GetRideFareByID(ctx, fareID)
+	if err != nil {
+		return nil, err
+	}
+
+	if rideFare == nil {
+		return nil, fmt.Errorf("Ride fare does not exists.")
+	}
+
+	if rideFare.UserID != userID {
+		return nil, fmt.Errorf("Ride fare does not belong to user id: %s. RideFare.UserID=%s", userID, rideFare.UserID)
+	}
+
+	return rideFare, nil
 }
 
 func estimateFareRoute(f *domain.RideFareModel, route *domain.OsrmAPIResponse) *domain.RideFareModel {

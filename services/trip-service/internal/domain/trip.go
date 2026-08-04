@@ -13,6 +13,7 @@ type TripModel struct {
 	UserID   string             `json:"userID"`
 	Status   string             `json:"status"`
 	RideFare *RideFareModel     `json:"ride_fare"`
+	Driver   *pb.Driver
 }
 
 type OsrmAPIResponse struct {
@@ -23,6 +24,20 @@ type OsrmAPIResponse struct {
 			Coordinates [][]float64 `json:"coordinates"`
 		} `json:"geometry"`
 	} `json:"routes"`
+}
+
+type TripRepository interface {
+	CreateTrip(ctx context.Context, trip *TripModel) (*TripModel, error)
+	SaveRideFare(ctx context.Context, fare *RideFareModel) (*RideFareModel, error)
+	GetRideFareByID(ctx context.Context, id string) (*RideFareModel, error)
+}
+
+type TripService interface {
+	CreateTrip(ctx context.Context, fare *RideFareModel) (*TripModel, error)
+	GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*OsrmAPIResponse, error)
+	GenerateTripFares(ctx context.Context, fares []*RideFareModel, userID string) ([]*RideFareModel, error)
+	EstimatePackagesPriceWithRoute(route *OsrmAPIResponse) []*RideFareModel
+	GetAndValidateFare(ctx context.Context, fareID, userID string) (*RideFareModel, error)
 }
 
 func (o *OsrmAPIResponse) ToProto() *pb.Route {
@@ -53,17 +68,6 @@ func NewTripModel(status string, fare *RideFareModel) *TripModel {
 		UserID:   fare.UserID,
 		Status:   status,
 		RideFare: fare,
+		Driver:   &pb.Driver{},
 	}
-}
-
-type TripRepository interface {
-	CreateTrip(ctx context.Context, trip *TripModel) (*TripModel, error)
-	SaveRideFare(ctx context.Context, fare *RideFareModel) (*RideFareModel, error)
-}
-
-type TripService interface {
-	CreateTrip(ctx context.Context, fare *RideFareModel) (*TripModel, error)
-	GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*OsrmAPIResponse, error)
-	GenerateTripFares(ctx context.Context, fares []*RideFareModel, userID string) ([]*RideFareModel, error)
-	EstimatePackagesPriceWithRoute(route *OsrmAPIResponse) []*RideFareModel
 }
