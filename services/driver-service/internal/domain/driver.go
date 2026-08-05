@@ -2,12 +2,28 @@ package domain
 
 import (
 	"context"
+	pb "ride-sharing/shared/proto/driver"
 	"ride-sharing/shared/types"
 )
 
 type Driver struct {
-	Id, Name, ProfilePic, CarPlate, GeoHash, PackageSlug string
-	Location                                             types.Coordinate
+	Id, Name, ProfilePicture, CarPlate, GeoHash, PackageSlug string
+	Location                                                 types.Coordinate
+}
+
+func (d *Driver) ToProto() *pb.Driver {
+	return &pb.Driver{
+		Id:             d.Id,
+		Name:           d.Name,
+		ProfilePicture: d.ProfilePicture,
+		CarPlate:       d.CarPlate,
+		Geohash:        d.GeoHash,
+		PackageSlug:    d.PackageSlug,
+		Location: &pb.Location{
+			Latitude:  d.Location.Latitude,
+			Longitude: d.Location.Longitude,
+		},
+	}
 }
 
 type DriverRepository interface {
@@ -17,5 +33,5 @@ type DriverRepository interface {
 
 type DriverService interface {
 	RegisterDriver(ctx context.Context, driver *Driver) *Driver
-	UnregisterDriver(ctx context.Context, driver *Driver)
+	UnregisterDriver(ctx context.Context, id string)
 }

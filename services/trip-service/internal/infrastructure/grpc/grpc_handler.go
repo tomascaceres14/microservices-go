@@ -45,7 +45,7 @@ func (h *GRPCHandler) PreviewTrip(ctx context.Context, req *pb.PreviewTripReques
 	}
 
 	estimatedFares := h.svc.EstimatePackagesPriceWithRoute(route)
-	fares, err := h.svc.SaveTripFares(ctx, estimatedFares, req.GetUserID())
+	fares, err := h.svc.SaveTripFares(ctx, estimatedFares, route, req.GetUserID())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Error saving fares: %s", err)
 	}

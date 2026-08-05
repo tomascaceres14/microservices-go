@@ -11,6 +11,7 @@ type RideFareModel struct {
 	UserID            string
 	PackageSlug       string // ex: van, luxury, sedan, etc.
 	TotalPriceInCents float64
+	Route             *OsrmAPIResponse
 }
 
 type PricingConfig struct {

@@ -60,7 +60,7 @@ func (s *TripService) GetRoute(ctx context.Context, pickup, destination *types.C
 	return routeResponse, nil
 }
 
-func (s *TripService) SaveTripFares(ctx context.Context, rideFares []*domain.RideFareModel, userID string) ([]*domain.RideFareModel, error) {
+func (s *TripService) SaveTripFares(ctx context.Context, rideFares []*domain.RideFareModel, route *domain.OsrmAPIResponse, userID string) ([]*domain.RideFareModel, error) {
 	fares := make([]*domain.RideFareModel, len(rideFares))
 
 	for i, v := range rideFares {
@@ -71,6 +71,7 @@ func (s *TripService) SaveTripFares(ctx context.Context, rideFares []*domain.Rid
 			UserID:            userID,
 			PackageSlug:       v.PackageSlug,
 			TotalPriceInCents: v.TotalPriceInCents,
+			Route:             route,
 		}
 
 		fare, err := s.repo.SaveRideFare(ctx, fare)

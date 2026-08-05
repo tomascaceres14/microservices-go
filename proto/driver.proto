@@ -5,13 +5,13 @@ package driver;
 option go_package = "shared/proto/driver;driver";
 
 message Driver {
-  string   id          = 1;
-  string   name        = 2;
-  string   profilePic  = 3;
-  string   carPlate    = 4;
-  string   geohash     = 5;
-  string   packageSlug = 6;
-  Location location    = 7;
+  string   id             = 1;
+  string   name           = 2;
+  string   profilePicture = 3;
+  string   carPlate       = 4;
+  string   geohash        = 5;
+  string   packageSlug    = 6;
+  Location location       = 7;
 }
 
 service DriverService {

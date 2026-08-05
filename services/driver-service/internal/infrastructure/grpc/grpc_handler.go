@@ -17,12 +17,25 @@ func NewGRPCHandler(server *grpc.Server, svc *service.DriverService) {
 	pb.RegisterDriverServiceServer(server, &GRPCHandler{
 		svc: svc,
 	})
-
 }
 
 func (h *GRPCHandler) RegisterDriver(ctx context.Context, in *pb.RegisterDriverRequest) (*pb.RegisterDriverResponse, error) {
-	return nil, nil
+
+	driver, err := h.svc.RegisterDriver(ctx, in.GetDriverID(), in.GetPackageSlug())
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.RegisterDriverResponse{
+		Driver: driver.ToProto(),
+	}, nil
 }
+
 func (h *GRPCHandler) UnregisterDriver(ctx context.Context, in *pb.RegisterDriverRequest) (*pb.RegisterDriverResponse, error) {
-	return nil, nil
+	h.svc.UnregisterDriver(ctx, in.GetDriverID())
+	return &pb.RegisterDriverResponse{
+		Driver: &pb.Driver{
+			Id: in.GetDriverID(),
+		},
+	}, nil
 }

@@ -22,16 +22,16 @@ const (
 )
 
 type Driver struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	ProfilePic    string                 `protobuf:"bytes,3,opt,name=profilePic,proto3" json:"profilePic,omitempty"`
-	CarPlate      string                 `protobuf:"bytes,4,opt,name=carPlate,proto3" json:"carPlate,omitempty"`
-	Geohash       string                 `protobuf:"bytes,5,opt,name=geohash,proto3" json:"geohash,omitempty"`
-	PackageSlug   string                 `protobuf:"bytes,6,opt,name=packageSlug,proto3" json:"packageSlug,omitempty"`
-	Location      *Location              `protobuf:"bytes,7,opt,name=location,proto3" json:"location,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name           string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	ProfilePicture string                 `protobuf:"bytes,3,opt,name=profilePicture,proto3" json:"profilePicture,omitempty"`
+	CarPlate       string                 `protobuf:"bytes,4,opt,name=carPlate,proto3" json:"carPlate,omitempty"`
+	Geohash        string                 `protobuf:"bytes,5,opt,name=geohash,proto3" json:"geohash,omitempty"`
+	PackageSlug    string                 `protobuf:"bytes,6,opt,name=packageSlug,proto3" json:"packageSlug,omitempty"`
+	Location       *Location              `protobuf:"bytes,7,opt,name=location,proto3" json:"location,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Driver) Reset() {
@@ -78,9 +78,9 @@ func (x *Driver) GetName() string {
 	return ""
 }
 
-func (x *Driver) GetProfilePic() string {
+func (x *Driver) GetProfilePicture() string {
 	if x != nil {
-		return x.ProfilePic
+		return x.ProfilePicture
 	}
 	return ""
 }
@@ -265,13 +265,11 @@ var File_driver_proto protoreflect.FileDescriptor
 
 const file_driver_proto_rawDesc = "" +
 	"\n" +
-	"\fdriver.proto\x12\x06driver\"\xd2\x01\n" +
+	"\fdriver.proto\x12\x06driver\"\xda\x01\n" +
 	"\x06Driver\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1e\n" +
-	"\n" +
-	"profilePic\x18\x03 \x01(\tR\n" +
-	"profilePic\x12\x1a\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12&\n" +
+	"\x0eprofilePicture\x18\x03 \x01(\tR\x0eprofilePicture\x12\x1a\n" +
 	"\bcarPlate\x18\x04 \x01(\tR\bcarPlate\x12\x18\n" +
 	"\ageohash\x18\x05 \x01(\tR\ageohash\x12 \n" +
 	"\vpackageSlug\x18\x06 \x01(\tR\vpackageSlug\x12,\n" +

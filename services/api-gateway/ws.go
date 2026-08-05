@@ -3,8 +3,9 @@ package main
 import (
 	"log"
 	"net/http"
+	"ride-sharing/services/api-gateway/grpc_clients"
 	"ride-sharing/shared/contracts"
-	"ride-sharing/shared/util"
+	pb "ride-sharing/shared/proto/driver"
 
 	"github.com/gorilla/websocket"
 )
@@ -50,8 +51,8 @@ func handleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	defer conn.Close()
 
-	userID := r.URL.Query().Get("userID")
-	if userID == "" {
+	driverID := r.URL.Query().Get("userID")
+	if driverID == "" {
 		log.Printf("No user ID provided\n")
 		return
 	}
@@ -62,25 +63,37 @@ func handleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: validate pkgSlug
+	driverService, err := grpc_clients.NewDriverServiceClient()
+	if err != nil {
+		log.Printf("Error connecting to driver service: %s", err)
+		conn.WriteMessage(websocket.TextMessage, []byte(err.Error()))
+		return
+	}
 
-	type Driver struct {
-		ID             string `json:"id"`
-		Name           string `json:"name"`
-		ProfilePicture string `json:"profilePicture"`
-		CarPlate       string `json:"carPlate"`
-		PackageSlug    string `json:"packageSlug"`
+	// Unregister driver when connection gets closed
+	defer func() {
+		driverService.Client.UnregisterDriver(r.Context(), &pb.RegisterDriverRequest{
+			DriverID:    driverID,
+			PackageSlug: pkgSlug,
+		})
+		driverService.Close()
+		log.Printf("Driver unregistered: %s", driverID)
+	}()
+
+	req := &pb.RegisterDriverRequest{
+		DriverID:    driverID,
+		PackageSlug: pkgSlug,
+	}
+
+	registerDriverResponse, err := driverService.Client.RegisterDriver(r.Context(), req)
+	if err != nil {
+		log.Printf("Error registering driver: %s", err)
+		return
 	}
 
 	msg := contracts.WSMessage{
 		Type: "driver.cmd.register",
-		Data: Driver{
-			ID:             userID,
-			Name:           "Tomas",
-			ProfilePicture: util.GetRandomAvatar(1),
-			CarPlate:       "ABC123",
-			PackageSlug:    "Van",
-		},
+		Data: registerDriverResponse.Driver,
 	}
 
 	if err := conn.WriteJSON(msg); err != nil {
@@ -88,4 +101,14 @@ func handleDriverWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Listen incoming messages
+	for {
+		_, msg, err := conn.ReadMessage()
+		if err != nil {
+			log.Printf("Error reading WS message: %s", err)
+			break
+		}
+
+		log.Printf("Message received: %s", msg)
+	}
 }
